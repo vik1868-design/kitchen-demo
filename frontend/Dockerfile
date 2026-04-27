@@ -7,9 +7,8 @@ RUN npm install
 
 COPY . .
 
-# API URL is injected at build time so Vite can inline it
-ARG VITE_API_URL=http://localhost:3001
-ENV VITE_API_URL=$VITE_API_URL
+# Use environment variable passed from Render
+ENV VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
 
 RUN npm run build
 

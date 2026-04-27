@@ -21,7 +21,7 @@ services:
     runtime: docker
     region: ohio
     dockerfilePath: frontend/Dockerfile
-    buildArgs:
+    envVars:
       - key: VITE_API_URL
         fromService:
           name: kitchen-api
