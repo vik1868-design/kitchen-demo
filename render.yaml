@@ -23,9 +23,7 @@ services:
     dockerfilePath: frontend/Dockerfile
     envVars:
       - key: VITE_API_URL
-        fromService:
-          name: kitchen-api
-          property: renderURL
+        value: https://kitchen-api.onrender.com
 
 databases:
   - name: kitchen-db
