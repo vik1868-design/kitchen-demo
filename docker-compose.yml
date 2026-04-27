@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL database ──────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kitchen
+      POSTGRES_USER: kitchen
+      POSTGRES_PASSWORD: kitchen_demo_pw
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitchen"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── MailHog — catches all emails, view at localhost:8025 ─────
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+
+  # ── Express API ──────────────────────────────────────────────
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://kitchen:kitchen_demo_pw@db:5432/kitchen
+      JWT_SECRET: super_secret_demo_key_change_in_production
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      EMAIL_FROM: "Central Kitchen <noreply@kitchen.local>"
+      KITCHEN_EMAIL: kitchen@kitchen.local
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── React frontend (nginx) ───────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Browser makes API calls so this must be the host address
+        VITE_API_URL: http://localhost:3001
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
