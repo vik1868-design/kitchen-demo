@@ -16,14 +16,12 @@ services:
       - key: PORT
         value: 3001
 
-  - type: static
+  - type: web
     name: kitchen-frontend
-    staticPublishDirectory: frontend/dist
-    buildCommand: cd frontend && npm install && npm run build
-    routes:
-      - path: /*
-        destination: /index.html
-    envVars:
+    runtime: docker
+    region: ohio
+    dockerfilePath: frontend/Dockerfile
+    buildArgs:
       - key: VITE_API_URL
         fromService:
           name: kitchen-api
